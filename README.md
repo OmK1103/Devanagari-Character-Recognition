@@ -1,32 +1,35 @@
 # Devanagari-Character-Recognition
 This is a brief summary of the Devanagari character recognition project.
+To my knowledge, apart from the students who took the machine learning course in semester 1 2017-18 at my institute, nobody has worked on this exact problem with the same/similar dataset. Devanagari OCR is still a highly challenging problem when the dataset contains noise.
 
-#Pre-processing the data The dataset is a set of 34,168 RGB images, containing one or more digits in them. The labels for all the images are provided. Also, bounding boxes are provided in the form of X and Y co-ordinates for every digit in every image. Pre-processing included three steps:
+The Dataset
 
-    Cropping the image discarding the region outside the bounding boxes.
-    Resizing the image to a 64x64 resolution.
-    Kernel sharpening using a 3x3 matrix : [[-1,-1,-1],[-1,-9,-1],[-1,-1,-1]]
+Eight pages from a very old book written in the Sanskrit language were photographed. Bounding boxes were manually drawn around every character and an automated script would then create a separate photo of the bounding box. The character present in this and the accents were also manually identified, and this data was stored using unicode in python. Thus, each photo had one character, and 0 - 4 accents. If joint characters were encountered, both the characters were considered.
 
-#Network Architecture
+Pre-processing the data
 
-Conv1 : 5x5x3 convolution, 32 filters, zero-padding : yes (done for all conv layers) Activation : ReLU max_pool (2x2)
+The dataset is a set of 2,949 RGB images, containing one or two characters and 0-3 accents in them. Pre-processing included two steps:
 
-Conv2 : 5x5x3 convolution, 64 filters Activation : ReLU max_pool (2x2)
+    Binarizing the images to Black and White using Otsu's method.
+    Padding each image to 216x216 resolution (the largest image was of 190x182 resolution), and then resizing to 100x100.
 
-Conv3 : 5x5x3 convolution, 128 filters Activation : ReLU max_pool (2x2)
+Network Architecture
 
-Conv4 : 5x5x3 convolution, 200 filters Activation : ReLU max_pool (2x2)
+Conv1 : 3x3x1 convolution , 16 filters, zero-padding : yes (done for all conv layers) Activation : ReLU max_pool : false
 
-Conv5 : 3x3x3 convolution, 300 filters Activation : ReLU max_pool (2x2)
+Conv2 : 3x3x1 convolution, 32 filters Activation : ReLU max_pool : true, (2x2)
 
-Dense layer : 1024 units Activation : ReLU dropout : 0.5
+Conv3 : 3x3x1 convolution, 64 filters Activation : ReLU max_pool : false
 
-Readout layer : 5 units (Assuming a maximum of 5 digits per image) Activation : Softmax
+Conv4 : 3x3x1 convolution, 128 filters Activation : ReLU max_pool : true, (2x2)
 
-Optimizer used for training : Adam, with learning rate 10^(-4) We used Adam instead of the usual batch gradient descent, because the learning rate changes as you train - it auto-estimates the momentum factor for training from two moment values calculated from the cost and the change in weights.
+Dense layer 1 : 512 units Activation : ReLU dropout : 0.5
 
-#Training Trained for 38 epochs on a NVIDIA 940M GPU. Time taken was ~100 minutes.
+Readout layer : 128 units (128 classes)Activation : sigmoid
 
-#Results Initial loss value : 7.12 Final loss value : less than 0.1 Accuracy on the test set : 79.66%
+Optimizer used for training : Adam, with learning rate 10^(-2)
 
-#How to run this on my machine Read the images whose digits are to be recognised using the cv2.imread() function. Download the checkpoint files and the weights file, and save them. In the main function, create an object of the SVHN class using the load_model method: obj = SVHN.load_model(name = '/address of the checkpoint and weights files/') obj.get_sequence(image you read using cv2) This should print the result to the terminal.
+Training and Results
+
+Trained for 5 epochs on a NVIDIA 940M GPU.
+Accuracy on the test set : 52%
